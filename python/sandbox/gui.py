@@ -47,6 +47,7 @@ window['solve_for'].bind("<Return>", "_return")
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
+# TODO add basic error handling
     event, values = window.read()
     print(event)
     if event in (None, 'Close'):  # if user closes window or clicks cancel
@@ -62,5 +63,5 @@ while True:
         window['sol'].update('')
         for i in range(len(solution)):
             window['sol'].update(values['solve_for'] + ' = ' + str(solution[i]) + '\n\n', append=True)
-#     TODO: add pretty printing
+# TODO: add pretty printing
 window.close()
