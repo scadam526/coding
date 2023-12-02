@@ -62,5 +62,5 @@ while True:
         window['sol'].update('')
         for i in range(len(solution)):
             window['sol'].update(values['solve_for'] + ' = ' + str(solution[i]) + '\n\n', append=True)
-
+#     TODO: add pretty printing
 window.close()
