@@ -15,7 +15,7 @@ from sympy import sympify, solve, Eq, pprint
 # y = a*x**2+b*x+c
 
 # prompt for equation
-equation_string = input("Enter equation (left side = right side) : ")
+equation_string = input("Enter equation (left side = right side): ")
 
 # Split into left and right side and sympify
 leftTxt = equation_string.split('=')[0]
@@ -37,5 +37,5 @@ solve_sym = sympify(input(f"Enter solve-for symbol: "))
 
 # solve and print
 solution = solve(expression, solve_sym)
-print(f"{solve_sym} = ")
+print(f"\n{solve_sym} = ")
 pprint(solution)
