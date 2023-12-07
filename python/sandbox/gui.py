@@ -1,9 +1,5 @@
-from PySimpleGUI import Window, Multiline, Button, InputText, theme, Text, Image, Frame
-from sympy import solve, sympify, Eq, pprint, latex
-
-
-# import matplotlib.pyplot as plt
-# from io import BytesIO
+from PySimpleGUI import Window, Multiline, Button, InputText, theme, Text, Combo
+from sympy import solve, sympify, Eq, pprint
 
 
 def solve_eq(eq_txt, solve_sym_txt):
@@ -32,19 +28,13 @@ def get_symbols(eq_txt):
 
 
 def update_sym_text(target_key, src_key):
-    window[target_key].update("Available symbols: " + " ".join(str(item) for item in get_symbols(values[src_key])))
-
-
-# def render_latex_to_image(latex_code, font_size=16):
-#     fig, ax = plt.subplots(figsize=(4, 1))
-#     ax.text(0.7, 0.7, f"${latex_code}$", fontsize=font_size, ha='center', va='center')
-#     ax.axis('off')
-#
-#     image_stream = BytesIO()
-#     plt.savefig(image_stream, format='png', bbox_inches='tight', pad_inches=0)
-#     plt.close()
-#
-#     return image_stream.getvalue()
+    if any(char in invalid_syms for char in values[src_key]):
+        err_syms = [char for char in values[src_key] if char in invalid_syms]
+        window[error_txt].update(f"Cannot use reserved symbols: {err_syms}")
+        return
+    symbols = get_symbols(values[src_key])
+    window[target_key].update("Available symbols: " + " ".join(str(item) for item in symbols))
+    window['solve_for'].update(values=list(symbols), set_to_index=0)
 
 
 # PySimpleGUI constructor
@@ -52,12 +42,13 @@ theme('DarkGreen6')  # Add a touch of color
 # Define window layout. Use key option to identify the value.
 width = 40
 layout = [[Text('Enter expression')],
-          [InputText(default_text='y=a*x**2+b*x+c', size=(width, 5), key='exp')],
+          # [InputText(default_text='y=a*x**2+b*x+c', size=(width, 5), key='exp')],
+          [InputText(size=(width, 5), key='exp')],
           [Text("Available symbols: ", key='sym_txt')],
-          [Text('Solve for:  '), InputText(default_text='x', size=(5, 5), key='solve_for')],
+          # [Text('Solve for:  '), InputText(size=(5, 5), key='solve_for')],
+          [Combo([], size=(5, 5), key='solve_for')],
           [Button('Parse'), Button('Solve'), Button('Close')],
           [Multiline(size=(width, 5), auto_size_text=True, key='sol')]]
-# [Frame('Solution', layout=[[Image(key='img')]], size=(600, 400))]]
 
 # Create the Window
 window = Window('Equation Solver', layout).Finalize()
@@ -65,6 +56,7 @@ window['exp'].bind("<Return>", "_return")
 window['solve_for'].bind("<Return>", "_return")
 
 error_txt = 'sol'
+invalid_syms = ['S', 'N', 'O', 'Q', 'e', 's', 'n', 'o', 'q']
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
@@ -79,12 +71,13 @@ while True:
 
         if event == 'Solve' or event == 'solve_for_return':  # if user closes window or clicks cancel
             update_sym_text('sym_txt', 'exp')
-            solution = solve_eq(values['exp'], values['solve_for'])
-            pprint(solution)
-            # window['img'].update(data=render_latex_to_image(latex(solution)))
-            window['sol'].update('')
-            for i in range(len(solution)):
-                window['sol'].update(values['solve_for'] + ' = ' + str(solution[i]) + '\n\n', append=True)
+            if not any(char in invalid_syms for char in values['exp']):
+                solution = solve_eq(values['exp'], values['solve_for'])
+                pprint(solution)
+                # window['img'].update(data=render_latex_to_image(latex(solution)))
+                window['sol'].update('')
+                for i in range(len(solution)):
+                    window['sol'].update(str(values['solve_for']) + ' = ' + str(solution[i]) + '\n\n', append=True)
         # TODO: add pretty printing
 
     except IndexError as e:
