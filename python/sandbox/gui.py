@@ -34,7 +34,7 @@ def update_sym_text(target_key, src_key):
         return
     symbols = get_symbols(values[src_key])
     window[target_key].update("Available symbols: " + " ".join(str(item) for item in symbols))
-    window['solve_for'].update(values=list(symbols))
+    window['solve_for'].update(values=list(symbols), set_to_index=solve_for_index)
 
 
 # PySimpleGUI constructor
@@ -46,7 +46,7 @@ layout = [[Text('Enter expression')],
           [InputText(size=(width, 5), key='exp')],
           [Text("Available symbols: ", key='sym_txt')],
           # [Text('Solve for:  '), InputText(size=(5, 5), key='solve_for')],
-          [Combo([], size=(10, 5), key='solve_for')],
+          [Combo([], size=(10, 5), key='solve_for', enable_events=True)],
           [Button('Parse'), Button('Solve'), Button('Close')],
           [Multiline(size=(width, 5), auto_size_text=True, key='sol')]]
 
@@ -58,20 +58,25 @@ window['solve_for'].bind("<Return>", "_return")
 error_txt = 'sol'
 # invalid_syms = ['S', 'N', 'O', 'Q', 'e', 's', 'n', 'o', 'q']
 invalid_syms = ['S', 'N', 'O', 'Q']
+solve_for_index = 0
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     try:
         event, values = window.read()
-        # print(event)
+        print(event)
         if event in (None, 'Close'):  # if user closes window or clicks cancel
             break
 
         if event == 'Parse' or event == 'exp_return':  # if user closes window or clicks cancel
             update_sym_text('sym_txt', 'exp')
 
+        if event == 'solve_for':
+            solve_for_index = get_symbols(values['exp']).index(values['solve_for'])
+
         if event == 'Solve' or event == 'solve_for_return':  # if user closes window or clicks cancel
             update_sym_text('sym_txt', 'exp')
+
             if not any(char in invalid_syms for char in values['exp']):
                 solution = solve_eq(values['exp'], values['solve_for'])
                 pprint(solution)
