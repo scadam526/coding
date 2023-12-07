@@ -34,7 +34,7 @@ def update_sym_text(target_key, src_key):
         return
     symbols = get_symbols(values[src_key])
     window[target_key].update("Available symbols: " + " ".join(str(item) for item in symbols))
-    window['solve_for'].update(values=list(symbols), set_to_index=0)
+    window['solve_for'].update(values=list(symbols))
 
 
 # PySimpleGUI constructor
@@ -46,7 +46,7 @@ layout = [[Text('Enter expression')],
           [InputText(size=(width, 5), key='exp')],
           [Text("Available symbols: ", key='sym_txt')],
           # [Text('Solve for:  '), InputText(size=(5, 5), key='solve_for')],
-          [Combo([], size=(5, 5), key='solve_for')],
+          [Combo([], size=(10, 5), key='solve_for')],
           [Button('Parse'), Button('Solve'), Button('Close')],
           [Multiline(size=(width, 5), auto_size_text=True, key='sol')]]
 
@@ -56,7 +56,8 @@ window['exp'].bind("<Return>", "_return")
 window['solve_for'].bind("<Return>", "_return")
 
 error_txt = 'sol'
-invalid_syms = ['S', 'N', 'O', 'Q', 'e', 's', 'n', 'o', 'q']
+# invalid_syms = ['S', 'N', 'O', 'Q', 'e', 's', 'n', 'o', 'q']
+invalid_syms = ['S', 'N', 'O', 'Q']
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
