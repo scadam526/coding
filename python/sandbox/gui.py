@@ -56,7 +56,6 @@ window['exp'].bind("<Return>", "_return")
 window['solve_for'].bind("<Return>", "_return")
 
 error_txt = 'sol'
-# invalid_syms = ['S', 'N', 'O', 'Q', 'e', 's', 'n', 'o', 'q']
 invalid_syms = ['S', 'N', 'O', 'Q']
 solve_for_index = 0
 
@@ -64,7 +63,7 @@ solve_for_index = 0
 while True:
     try:
         event, values = window.read()
-        print(event)
+        # print(event)
         if event in (None, 'Close'):  # if user closes window or clicks cancel
             break
 
