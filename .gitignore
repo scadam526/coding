@@ -1,6 +1,7 @@
 *.exe
-.\python\Equation Solver\dist\
-.\python\Equation Solver\build\
-.\python\Equation Solver\venv\
-.\python\Equation Solver\.idea\
+/python/Equation Solver/dist/
+/python/Equation Solver/build/
+/python/Equation Solver/venv/
+/python/Equation Solver/.idea/
+*.idea/
 *.spec
