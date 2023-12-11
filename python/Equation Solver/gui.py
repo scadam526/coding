@@ -1,5 +1,9 @@
-from PySimpleGUI import Window, Multiline, Button, InputText, theme, Text, Combo
-from sympy import solve, sympify, Eq, pprint
+# Shawn Adams
+# 11 Dec 2023
+# .exe icon by Eucalyp at https://www.flaticon.com/authors/eucalyp
+
+from PySimpleGUI import Window, Multiline, Button, InputText, theme, Text, Listbox
+from sympy import solve, sympify, Eq
 
 
 def solve_eq(eq_txt, solve_sym_txt):
@@ -46,7 +50,8 @@ layout = [[Text('Enter expression')],
           [InputText(size=(width, 5), key='exp')],
           [Text("Available symbols: ", key='sym_txt')],
           # [Text('Solve for:  '), InputText(size=(5, 5), key='solve_for')],
-          [Combo([], size=(10, 5), key='solve_for', enable_events=True)],
+          # [Combo([], size=(10, 5), key='solve_for', enable_events=True)],
+          [Listbox([], size=(10, 5), key='solve_for', enable_events=True)],
           [Button('Parse'), Button('Solve'), Button('Close')],
           [Multiline(size=(width, 5), auto_size_text=True, key='sol')]]
 
@@ -63,7 +68,7 @@ solve_for_index = 0
 while True:
     try:
         event, values = window.read()
-        # print(event)
+        print(event)
         if event in (None, 'Close'):  # if user closes window or clicks cancel
             break
 
@@ -71,18 +76,20 @@ while True:
             update_sym_text('sym_txt', 'exp')
 
         if event == 'solve_for':
-            solve_for_index = get_symbols(values['exp']).index(values['solve_for'])
+            solve_for_index = get_symbols(values['exp']).index(values['solve_for'][0])
+            # print(get_symbols(values['exp']))
+            # print(values['solve_for'][0])
 
         if event == 'Solve' or event == 'solve_for_return':  # if user closes window or clicks cancel
             update_sym_text('sym_txt', 'exp')
 
             if not any(char in invalid_syms for char in values['exp']):
                 solution = solve_eq(values['exp'], values['solve_for'])
-                pprint(solution)
+                # pprint(solution)
                 # window['img'].update(data=render_latex_to_image(latex(solution)))
                 window['sol'].update('')
                 for i in range(len(solution)):
-                    window['sol'].update(str(values['solve_for']) + ' = ' + str(solution[i]) + '\n\n', append=True)
+                    window['sol'].update(str(values['solve_for'][0]) + ' = ' + str(solution[i]) + '\n\n', append=True)
         # TODO: add pretty printing
 
     except IndexError as e:
