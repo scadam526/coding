@@ -46,13 +46,14 @@ theme('DarkGreen6')  # Add a touch of color
 # Define window layout. Use key option to identify the value.
 width = 40
 layout = [[Text('Enter expression')],
-          # [InputText(default_text='y=a*x**2+b*x+c', size=(width, 5), key='exp')],
-          [InputText(size=(width, 5), key='exp')],
+          [InputText(default_text='y=a*x**2+b*x+c', size=(width, 5), key='exp')],
+          [Button('Parse'), Button('Solve', key='solve_button', visible=False)],
+          # [InputText(size=(width, 5), key='exp')],
           [Text("Available symbols: ", key='sym_txt')],
+          [Text("Solve for: ")],
           # [Text('Solve for:  '), InputText(size=(5, 5), key='solve_for')],
           # [Combo([], size=(10, 5), key='solve_for', enable_events=True)],
-          [Listbox([], size=(10, 5), key='solve_for', enable_events=True)],
-          [Button('Parse'), Button('Solve'), Button('Close')],
+          [Listbox([], size=(10, 5), key='solve_for', enable_events=True), Button('Close')],
           [Multiline(size=(width, 5), auto_size_text=True, key='sol')]]
 
 # Create the Window
@@ -64,36 +65,39 @@ error_txt = 'sol'
 invalid_syms = ['S', 'N', 'O', 'Q']
 solve_for_index = 0
 
-# Event Loop to process "events" and get the "values" of the inputs
-while True:
-    try:
-        event, values = window.read()
-        print(event)
-        if event in (None, 'Close'):  # if user closes window or clicks cancel
-            break
+if __name__ == "__main__":
+    # Event Loop to process "events" and get the "values" of the inputs
+    while True:
+        try:
+            event, values = window.read()
+            # print(event)
+            if event in (None, 'Close'):  # if user closes window or clicks cancel
+                break
 
-        if event == 'Parse' or event == 'exp_return':  # if user closes window or clicks cancel
-            update_sym_text('sym_txt', 'exp')
+            if event == 'Parse' or event == 'exp_return':
+                update_sym_text('sym_txt', 'exp')
 
-        if event == 'solve_for':
-            solve_for_index = get_symbols(values['exp']).index(values['solve_for'][0])
-            # print(get_symbols(values['exp']))
-            # print(values['solve_for'][0])
+            if event == 'solve_for':
+                solve_for_index = get_symbols(values['exp']).index(values['solve_for'][0])
+                window['solve_button'].click()
+                # print(get_symbols(values['exp']))
+                # print(values['solve_for'][0])
 
-        if event == 'Solve' or event == 'solve_for_return':  # if user closes window or clicks cancel
-            update_sym_text('sym_txt', 'exp')
+            if event == 'Solve' or event == 'solve_for_return' or event == 'solve_button':
+                update_sym_text('sym_txt', 'exp')
 
-            if not any(char in invalid_syms for char in values['exp']):
-                solution = solve_eq(values['exp'], values['solve_for'])
-                # pprint(solution)
-                # window['img'].update(data=render_latex_to_image(latex(solution)))
-                window['sol'].update('')
-                for i in range(len(solution)):
-                    window['sol'].update(str(values['solve_for'][0]) + ' = ' + str(solution[i]) + '\n\n', append=True)
-        # TODO: add pretty printing
+                if not any(char in invalid_syms for char in values['exp']):
+                    solution = solve_eq(values['exp'], values['solve_for'])
+                    # pprint(solution)
+                    # window['img'].update(data=render_latex_to_image(latex(solution)))
+                    window['sol'].update('')
+                    for i in range(len(solution)):
+                        window['sol'].update(str(values['solve_for'][0]) + ' = ' + str(solution[i]) + '\n\n',
+                                             append=True)
+            # TODO: add pretty printing
 
-    except IndexError as e:
-        print(f"Index Error: {e}")
-        window[error_txt].update(f"Formula parsing error: {e}")
+        except IndexError as e:
+            print(f"Index Error: {e}")
+            window[error_txt].update(f"Formula parsing error: {e}")
 
-window.close()
+    window.close()
