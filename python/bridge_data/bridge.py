@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 import pandas as pd
-import pandas.plotting.table
+# import pandas.plotting.table
 
 working_dir = 'C:/Users/Shawn/NPD Dropbox/Projects/inQB8/Engineering/Hardware/code/AD4130 data'
 offset = 0x800000
@@ -37,13 +37,13 @@ def plotData(x, y):
     # Calculate average and range
     avg = np.mean(y)
     range = np.max(y) - np.min(y)
-    print(avg, range)
+    # print(avg, range)
 
     # # use pandas to plot the data and add a table showing avg and range
-    # df = pd.DataFrame({xlabel: x, ylabel: y})
-    # ax = df.plot(x=xlabel, y=ylabel, kind='line', title=plotlabel)
-    # ax.set_xlabel(xlabel)
-    # ax.set_ylabel(ylabel)
+    df = pd.DataFrame({xlabel: x, ylabel: y})
+    ax = df.plot(x=xlabel, y=ylabel, kind='line', title=plotlabel)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
     
     # # Create a table with the average and range
     # table_data = [['Average', 'Range'], [avg, range]]
@@ -52,10 +52,15 @@ def plotData(x, y):
     # axs[1].axis('off')
     # axs[1].table(cellText=table_data, cellLoc='center', loc='center')
 
-    fig, ax = plt.subplots(1, 1)
-    table(ax, cellText=table_data, cellLoc='center', loc='upper right')
+    # fig, ax = plt.subplots(1, 1)
+    # table(ax, cellText=table_data, cellLoc='center', loc='upper right')
 
-    # plt.tight_layout()
+    # add text labels showing avg and range on the top right of the plot
+    plt.text(0.5, 0.5, 'Average: ' + str(avg) + '\nRange: ' + str(range), fontsize=12, ha='left', transform=ax.transAxes)
+
+    mplcursors.cursor(hover=True)
+
+    plt.tight_layout()
     plt.show()
 
         
