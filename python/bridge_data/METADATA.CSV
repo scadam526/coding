@@ -1,0 +1,17 @@
+bridgeAdcOffset ,0
+bridgeAmbientReference ,760
+bridgeGain ,64
+bridgeSensitivity ,1
+bridgeTareDacCounts ,0
+clockFreqHz ,32768
+crc ,30880
+numAccelSamples ,3971
+numBridgeSamples ,3973
+numEcgSamples ,0
+numLpsSamples ,3964
+pressureSensorSelect ,0
+recordingPeriodTicks ,165
+recordingTrigger ,MT
+serialNumber ,0
+timeStamp ,440199354
+

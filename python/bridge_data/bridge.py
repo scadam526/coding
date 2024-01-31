@@ -1,4 +1,6 @@
+import os
 import sys
+import glob
 import subprocess
 import matplotlib.pyplot as plt
 import mplcursors
@@ -6,8 +8,11 @@ import numpy as np
 import pandas as pd
 # import pandas.plotting.table
 
-workingDir = 'C:/Users/Shawn/NPD Dropbox/Projects/inQB8/Engineering/Hardware/code/AD4130 data'
+workingDir = os.getcwd()
 decoderDir = workingDir
+decoderPath = decoderDir + '/Windows_NPDFileDecoder.exe'
+bridgePath = workingDir + '/bridge.csv'
+npdFileDir = workingDir
 
 # pressure bridge sense constants
 offsetConst = 0x800000
@@ -29,6 +34,21 @@ trimFirstVals = 20
 figXsize = 18
 figYsize = 10
 
+
+def decodeNPD(f):
+    # run the decoder to convert the .npd file to a .csv file
+    try:
+        subprocess.run([decoderPath, f], check=True)
+    except subprocess.CalledProcessError as e:
+        print("An error occurred:", e)
+        sys.exit(1)
+    except FileNotFoundError:
+        print("File not found:", decoderPath)
+        sys.exit(1)
+    except Exception as e:
+        print("An error occurred:", e)
+        sys.exit(1)
+    print('NPD file decoded to:', bridgePath)
 
 # read in csv file and store it in a data array. then store each column into it's own array. 
 def processFile(f):
@@ -76,6 +96,7 @@ def plotData(x, y):
     plt.text(0.3, .95, 'Average: ' + '{:.2f}'.format(avg) + ' mmHg\nRange: ' + '{:.2f}'.format(range) + ' mmHg', fontsize=10, va='center', ha='left', transform=ax.transAxes, in_layout=False, bbox=dict(facecolor='white', alpha=0.5))
     plt.text(0.95, 0.01, 'Trimmed first ' + str(trimFirstVals) + ' values', fontsize=10, va='bottom', ha='right', transform=ax.transAxes)
     plt.text(0.03, 0.01, 'Cal pressure: ' + str(zeroCalPress) + ' mmHg \nSensitivity: ' + str(int(sensitivity/1e-6)) + ' uV/V/mmHg', fontsize=10, va='bottom', ha='left', transform=ax.transAxes)
+    plt.text(0.3, 0.01, 'NPD File: ' + os.path.basename(npdFilePath), fontsize=10, va='bottom', ha='left', transform=ax.transAxes)
 
     mplcursors.cursor(hover=True)
     
@@ -84,13 +105,29 @@ def plotData(x, y):
 
         
 if __name__ == "__main__":
+    for file in glob.glob('*.csv'):
+        os.remove(file)
+
     if len(sys.argv) == 2:
-        filename = workingDir + '\\' + sys.argv[1]
+        npdFilePath = workingDir + '\\' + sys.argv[1]
     elif len(sys.argv) >= 2:
         print('Error: too many arguments')
         sys.exit(1)
     else:
-        filename = workingDir + '/bridge.csv'
-    time, counts = processFile(filename)
+        npdFiles = glob.glob(npdFileDir + '/*.npd')
+        npdFiles.sort(key=os.path.getmtime, reverse=True)
+        npdFilePath = npdFiles[0]
+        print('Using:', npdFilePath)
+    
+    decodeNPD(npdFilePath)
+
+    if os.path.exists(bridgePath):
+        print('bridge file exists')
+    else:
+        print('bridge file does not exist')
+        sys.exit(1)
+
+    time, counts = processFile(bridgePath)
     pressure = countsToPress(counts)
+    
     plotData(time, pressure) # change this to plot volts once conversion is implemented
