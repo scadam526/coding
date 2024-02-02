@@ -25,6 +25,7 @@ bits = 24
 maxCounts = 2**bits - 1
 gain = 64
 sample_rate = 200
+nyquist = 0.5 * sample_rate
 
 # plot settings
 xlabel = 'Time [s]'
@@ -84,6 +85,23 @@ def countsToPress(counts):
         pressure.append(((count-offsetConst)/(sensitivity*maxCounts*gain))*(gainTrimConst/gainTrimReg)+(offsetReg-offsetConst)+zeroCalPress)
     return pressure
 
+def calcFFT(press):
+    # compute frequency and amplitude of the FFT
+    fft_values = np.fft.fft(press)
+    frequencies = np.fft.fftfreq(len(fft_values), 1/(sample_rate-1))
+
+    plt.figure(figsize=(15,10))
+    plt.plot(frequencies, np.abs(fft_values), linewidth=0.5)  # Set line width to 0.5
+    plt.title('FFT of Column 2 Data')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Magnitude')
+    plt.xlim([0, nyquist])  # Set x-axis limits to 0-100Hz
+    plt.ylim([0, 600])  # Set x-axis limits to 0-100Hz
+    plt.xticks(np.arange(0, 101, 5)) 
+    plt.grid(True)
+    mplcursors.cursor(hover=True)
+    plt.show()
+
 
 def plotData(x, y):
     # Calculate average and range
@@ -134,6 +152,7 @@ if __name__ == "__main__":
         
     time, counts = processFile(bridgePath)
     pressure = countsToPress(counts)
+    # calcFFT(pressure)
     
     # print the time it took to process the data
     print(f'Data processing time: {(pd.Timestamp.now() - startTime).total_seconds():.3f} seconds')
