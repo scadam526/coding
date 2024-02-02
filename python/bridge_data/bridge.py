@@ -64,7 +64,7 @@ def processFile(f):
             df = pd.read_csv(f, names=colNames, index_col=colNames[0])
             if trimFirstVals > 0: 
                 df = df.iloc[trimFirstVals:] # trim the first 50 vlues in df
-            
+
             df.index = df.index / 1e6 # divide all time values by 1e6 to convert from microseconds to seconds
             
             time = df.index.values.tolist()
@@ -152,7 +152,7 @@ if __name__ == "__main__":
         
     time, counts = processFile(bridgePath)
     pressure = countsToPress(counts)
-    # calcFFT(pressure)
+    calcFFT(pressure)
     
     # print the time it took to process the data
     print(f'Data processing time: {(pd.Timestamp.now() - startTime).total_seconds():.3f} seconds')
