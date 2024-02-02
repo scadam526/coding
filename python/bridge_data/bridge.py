@@ -10,8 +10,8 @@ import pandas as pd
 
 workingDir = os.getcwd()
 decoderDir = workingDir
-decoderPath = decoderDir + '/Windows_NPDFileDecoder.exe'
-bridgePath = workingDir + '/bridge.csv'
+decoderPath = decoderDir + '\Windows_NPDFileDecoder.exe'
+bridgePath = workingDir + '\\raw_bridge.csv'
 npdFileDir = workingDir
 
 # pressure bridge sense constants
@@ -24,6 +24,7 @@ sensitivity = 1e-5    # [1/mmHg] this value will be read from the AD4130 and rep
 bits = 24
 maxCounts = 2**bits - 1
 gain = 64
+sample_rate = 200
 
 # plot settings
 xlabel = 'Time [s]'
@@ -38,7 +39,9 @@ figYsize = 10
 def decodeNPD(f):
     # run the decoder to convert the .npd file to a .csv file
     try:
-        subprocess.run([decoderPath, f], check=True)
+        print(decoderPath, '-r ' + f)
+        # use subprocess.run to run the decoder with the -r flag to decode the .npd file
+        subprocess.run([decoderPath, '-r', f], check=True)
     except subprocess.CalledProcessError as e:
         print("An error occurred:", e)
         sys.exit(1)
@@ -50,8 +53,9 @@ def decodeNPD(f):
         sys.exit(1)
     print('NPD file decoded to:', bridgePath)
 
-# read in csv file and store it in a data array. then store each column into it's own array. 
+
 def processFile(f):
+    # read in csv file and store it in a data array. then store each column into it's own array. 
     time = []
     counts = []
     try:
@@ -105,6 +109,9 @@ def plotData(x, y):
 
         
 if __name__ == "__main__":
+    # get program start time
+    startTime = pd.Timestamp.now()
+
     for file in glob.glob('*.csv'):
         os.remove(file)
 
@@ -121,13 +128,14 @@ if __name__ == "__main__":
     
     decodeNPD(npdFilePath)
 
-    if os.path.exists(bridgePath):
-        print('bridge file exists')
-    else:
+    if not os.path.exists(bridgePath):
         print('bridge file does not exist')
         sys.exit(1)
-
+        
     time, counts = processFile(bridgePath)
     pressure = countsToPress(counts)
     
+    # print the time it took to process the data
+    print(f'Data processing time: {(pd.Timestamp.now() - startTime).total_seconds():.3f} seconds')
     plotData(time, pressure) # change this to plot volts once conversion is implemented
+    
