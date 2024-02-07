@@ -36,6 +36,8 @@ figYsize = 10
 
 def decodeNPD(f):
     # run the decoder to convert the .npd file to a .csv file
+    # TODO: add a popup with option to cancel or browse for the .npd file if no file is found. 
+    # TODO: add ability to drop a file onto the script to run it.
     try:
         print(decoderPath, '-r ' + f)
         # use subprocess.run to run the decoder with the -r flag to decode the .npd file
@@ -53,7 +55,8 @@ def decodeNPD(f):
 
 
 def processFile(f):
-    # read in csv file and store it in a data array. then store each column into it's own array. 
+    # read in csv file and store it in a data array. then store each column into it's own array.
+    # TODO: add importing of metadata.csv to get the zeroCalPress and sensitivity values as well as storing them in dict for display
     time = np.array([])
     counts = np.array([])
     try:
@@ -92,6 +95,7 @@ def calcFFT(press):
     plt.ylim([0, 600])  # Set x-axis limits to 0-100Hz
     plt.xticks(np.arange(0, 101, 5)) 
     plt.grid(True)
+    plt.tight_layout()
     mplcursors.cursor(hover=True)
     plt.show()
 
