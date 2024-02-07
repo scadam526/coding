@@ -16,13 +16,10 @@ npdFileDir = workingDir
 
 # pressure bridge sense constants
 offsetConst = 0x800000
-gainTrimConst = 0x555555
-offsetReg = 0x800000    # this value will be read from the AD4130 and reported in metadata.csv
-gainTrimReg = 0x555555  # this value will be read from the AD4130 and reported in metadata.csv
 zeroCalPress = 750      # [mmHg] this value will be read from the AD4130 and reported in metadata.csv
-sensitivity = 1e-5    # [1/mmHg] this value will be read from the AD4130 and reported in metadata.csv
+sensitivity = 10e-6    # [1/mmHg] this value will be read from the AD4130 and reported in metadata.csv
 bits = 24
-maxCounts = 2**bits - 1
+maxCounts = 2**(bits - 1)
 gain = 64
 sample_rate = 200
 nyquist = 0.5 * sample_rate
@@ -32,7 +29,7 @@ xlabel = 'Time [s]'
 ylabel = 'Pressure [mmHg]'
 plotlabel = 'Pressure vs Time'
 colNames = ['time', 'counts']
-trimFirstVals = 20
+trimFirstVals = 5 # trim the leading values to remove startup transient. # TODO: remove this once transient is fixed 
 figXsize = 18
 figYsize = 10
 
@@ -57,8 +54,8 @@ def decodeNPD(f):
 
 def processFile(f):
     # read in csv file and store it in a data array. then store each column into it's own array. 
-    time = []
-    counts = []
+    time = np.array([])
+    counts = np.array([])
     try:
         with open(f, 'r') as file:
             df = pd.read_csv(f, names=colNames, index_col=colNames[0])
@@ -77,13 +74,9 @@ def processFile(f):
     return time, counts
 
 
-def countsToPress(counts):
-    # convert from counts to volts and pressure
-    # volts = ((counts - offsetConst) / (maxCounts * gain))*(gainTrimConst / gainTrimReg)+(offsetReg - offsetConst)
-    pressure = []
-    for count in counts:
-        pressure.append(((count-offsetConst)/(sensitivity*maxCounts*gain))*(gainTrimConst/gainTrimReg)+(offsetReg-offsetConst)+zeroCalPress)
-    return pressure
+def countsToPress(counts):  
+    # convert counts to pressure
+    return ((np.array(counts) - offsetConst) / (sensitivity * maxCounts * gain)) + zeroCalPress
 
 def calcFFT(press):
     # compute frequency and amplitude of the FFT
@@ -92,7 +85,7 @@ def calcFFT(press):
 
     plt.figure(figsize=(15,10))
     plt.plot(frequencies, np.abs(fft_values), linewidth=0.5)  # Set line width to 0.5
-    plt.title('FFT of Column 2 Data')
+    plt.title('FFT of Pressure vs Time')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
     plt.xlim([0, nyquist])  # Set x-axis limits to 0-100Hz
@@ -119,6 +112,12 @@ def plotData(x, y):
     plt.text(0.95, 0.01, 'Trimmed first ' + str(trimFirstVals) + ' values', fontsize=10, va='bottom', ha='right', transform=ax.transAxes)
     plt.text(0.03, 0.01, 'Cal pressure: ' + str(zeroCalPress) + ' mmHg \nSensitivity: ' + str(int(sensitivity/1e-6)) + ' uV/V/mmHg', fontsize=10, va='bottom', ha='left', transform=ax.transAxes)
     plt.text(0.3, 0.01, 'NPD File: ' + os.path.basename(npdFilePath), fontsize=10, va='bottom', ha='left', transform=ax.transAxes)
+
+    # add a button to the plot that runs the calcFFT function
+    ax_button = plt.axes([0.08, 0.92, 0.1, 0.04])
+    button = plt.Button(ax_button, 'FFT', color='lightgoldenrodyellow', hovercolor='0.975')
+    button.on_clicked(lambda x: calcFFT(y))
+
 
     mplcursors.cursor(hover=True)
     
@@ -152,7 +151,6 @@ if __name__ == "__main__":
         
     time, counts = processFile(bridgePath)
     pressure = countsToPress(counts)
-    calcFFT(pressure)
     
     # print the time it took to process the data
     print(f'Data processing time: {(pd.Timestamp.now() - startTime).total_seconds():.3f} seconds')

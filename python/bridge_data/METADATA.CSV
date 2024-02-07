@@ -2,17 +2,15 @@ bridgeAdcOffset ,0
 bridgeAmbientReference ,760
 bridgeGain ,64
 bridgeSensitivity ,1
-bridgeTarePwmDuty ,820
 clockFreqHz ,32768
 crc ,30880
-extAdcGainCalValue ,5617676
-numAccelSamples ,0
-numBridgeSamples ,11916
+numAccelSamples ,3971
+numBridgeSamples ,3973
 numEcgSamples ,0
-numLpsSamples ,0
+numLpsSamples ,3964
 pressureSensorSelect ,0
 recordingPeriodTicks ,165
 recordingTrigger ,MT
 serialNumber ,0
-timeStamp ,-773567798
+timeStamp ,440199354
 
