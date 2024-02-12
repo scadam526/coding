@@ -136,7 +136,7 @@ def plotData(x, y1, y2):
     plt.text(0.3, 0.01, 'NPD File: ' + os.path.basename(npdFilePath), fontsize=10, va='bottom', ha='left', transform=ax.transAxes)
 
     # add a button to the plot that runs the calcFFT function
-    ax_button = plt.axes([0.08, 0.92, 0.1, 0.04])
+    ax_button = plt.axes([0.075, 0.9, 0.1, 0.04])
     button = plt.Button(ax_button, 'FFT', color='lightgoldenrodyellow', hovercolor='0.975')
     button.on_clicked(lambda x: calcFFT(y1))
 
@@ -146,7 +146,7 @@ def plotData(x, y1, y2):
     # button2.on_clicked(showMetadata(metadata))
 
     mplcursors.cursor(hover=True)
-    # plt.tight_layout()
+    plt.subplots_adjust(left=0.05, right = 0.98, top = 0.95, bottom = 0.05, wspace=0.2, hspace=0.2)
     plt.show()
 
         
@@ -162,11 +162,6 @@ if __name__ == "__main__":
 
     for file in glob.glob('*.csv'):
         os.remove(file)
-
-    # delete all .npd files in the working directory
-    # for file in glob.glob('*.npd'):
-    #     os.remove(file)
-
 
     if len(sys.argv) == 2:
         npdFilePath = workingDir + '\\' + sys.argv[1]
