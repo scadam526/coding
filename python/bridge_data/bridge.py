@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import glob
 import subprocess
@@ -6,18 +7,17 @@ import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 import pandas as pd
-# import pandas.plotting.table
 
 workingDir = os.getcwd()
 decoderDir = workingDir
-decoderPath = decoderDir + '\Windows_NPDFileDecoder.exe'
-bridgePath = workingDir + '\\raw_bridge.csv'
+decoderPath = decoderDir + '\\Windows_NPDFileDecoder.exe'
+bridgePath = workingDir + '\\bridge.csv'
 npdFileDir = workingDir
 
 # pressure bridge sense constants
 offsetConst = 0x800000
 zeroCalPress = 750      # [mmHg] this value will be read from the AD4130 and reported in metadata.csv
-sensitivity = 10e-6    # [1/mmHg] this value will be read from the AD4130 and reported in metadata.csv
+sensitivity = 10e-6   # [1/mmHg] this value will be read from the AD4130 and reported in metadata.csv
 bits = 24
 maxCounts = 2**(bits - 1)
 gain = 64
@@ -28,8 +28,8 @@ nyquist = 0.5 * sample_rate
 xlabel = 'Time [s]'
 ylabel = 'Pressure [mmHg]'
 plotlabel = 'Pressure vs Time'
-colNames = ['time', 'counts']
-trimFirstVals = 5 # trim the leading values to remove startup transient. # TODO: remove this once transient is fixed 
+colNames = ['time', 'counts', 'decoderPress']
+trimFirstVals = 1 # trim the leading values to remove startup transient. # TODO: remove this once transient is fixed 
 figXsize = 18
 figYsize = 10
 
@@ -37,11 +37,10 @@ figYsize = 10
 def decodeNPD(f):
     # run the decoder to convert the .npd file to a .csv file
     # TODO: add a popup with option to cancel or browse for the .npd file if no file is found. 
-    # TODO: add ability to drop a file onto the script to run it.
     try:
-        print(decoderPath, '-r ' + f)
-        # use subprocess.run to run the decoder with the -r flag to decode the .npd file
-        subprocess.run([decoderPath, '-r', f], check=True)
+        print('Running decoder:', decoderPath, '-r ' + f)
+        # use subprocess.run to run the decoder
+        subprocess.run([decoderPath, f], check=True)
     except subprocess.CalledProcessError as e:
         print("An error occurred:", e)
         sys.exit(1)
@@ -51,12 +50,11 @@ def decodeNPD(f):
     except Exception as e:
         print("An error occurred:", e)
         sys.exit(1)
-    print('NPD file decoded to:', bridgePath)
+    print('Bridge data decoded to:', bridgePath)
 
 
-def processFile(f):
+def processBridgeFile(f):
     # read in csv file and store it in a data array. then store each column into it's own array.
-    # TODO: add importing of metadata.csv to get the zeroCalPress and sensitivity values as well as storing them in dict for display
     time = np.array([])
     counts = np.array([])
     try:
@@ -64,17 +62,32 @@ def processFile(f):
             df = pd.read_csv(f, names=colNames, index_col=colNames[0])
             if trimFirstVals > 0: 
                 df = df.iloc[trimFirstVals:] # trim the first 50 vlues in df
-
             df.index = df.index / 1e6 # divide all time values by 1e6 to convert from microseconds to seconds
-            
             time = df.index.values.tolist()
+            decoderPress = df['decoderPress'].values.tolist()
             counts = df['counts'].values.tolist()
 
     except FileNotFoundError:
         print("File not found:", f)
     except Exception as e:
         print("An error occurred:", e)
-    return time, counts
+    return time, counts, decoderPress
+
+# function to bring in metadata.csv and create a dictionary of the values with column 1 as the key and column 2 as the value
+def getMetaData(f):
+    # read in metadata.csv and store it in a dictionary
+    try:
+        with open(f, 'r') as file:
+            df = pd.read_csv(f, names=['key', 'value'], index_col='key')
+            # trim trailing zeros from the key and value columns
+            df.index = df.index.str.strip()
+            df['value'] = df['value'].str.strip()
+            # print(df.to_dict()['value'])
+            return df.to_dict()['value']
+    except FileNotFoundError:
+        print("File not found:", f)
+    except Exception as e:
+        print("An error occurred:", e)
 
 
 def countsToPress(counts):  
@@ -96,18 +109,23 @@ def calcFFT(press):
     plt.xticks(np.arange(0, 101, 5)) 
     plt.grid(True)
     plt.tight_layout()
-    mplcursors.cursor(hover=True)
     plt.show()
+ 
 
-
-def plotData(x, y):
+def plotData(x, y1, y2):
     # Calculate average and range
-    avg = np.mean(y)
-    range = np.max(y) - np.min(y)
+    avg = np.mean(y1)
+    range = np.max(y1) - np.min(y1)
 
     # plot the data
-    df = pd.DataFrame({xlabel: x, ylabel: y})
-    ax = df.plot(x=xlabel, y=ylabel, figsize=(15, 10), kind='line', title=plotlabel)
+    # df = pd.DataFrame({xlabel: x, ylabel: y1})
+    # ax = df.plot(x=xlabel, y=ylabel, figsize=(15, 10), kind='line', title=plotlabel)
+    # plot y1 and y2 vs x on the same axis
+    fig, ax = plt.subplots(figsize=(figXsize, figYsize))
+    ax.plot(x, y2, label='Decoder Pressure', color='lightblue')
+    ax.plot(x, y1, label='Calculated Pressure', color='b')
+    ax.legend()
+    ax.set_title(plotlabel)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     
@@ -120,12 +138,15 @@ def plotData(x, y):
     # add a button to the plot that runs the calcFFT function
     ax_button = plt.axes([0.08, 0.92, 0.1, 0.04])
     button = plt.Button(ax_button, 'FFT', color='lightgoldenrodyellow', hovercolor='0.975')
-    button.on_clicked(lambda x: calcFFT(y))
+    button.on_clicked(lambda x: calcFFT(y1))
 
+    # add a button to show the contents of matadata in a table
+    # ax_button2 = plt.axes([0.08, 0.85, 0.1, 0.04])
+    # button2 = plt.Button(ax_button2, 'Metadata', color='lightgoldenrodyellow', hovercolor='0.975')
+    # button2.on_clicked(showMetadata(metadata))
 
     mplcursors.cursor(hover=True)
-    
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.show()
 
         
@@ -133,8 +154,19 @@ if __name__ == "__main__":
     # get program start time
     startTime = pd.Timestamp.now()
 
+    # get current user home directory
+    home = os.path.expanduser("~")
+    for file in glob.glob(home + '/Desktop/*.npd'):
+        # move any .npd files on the desktop to the working directory
+        os.rename(file, npdFileDir + '\\' + os.path.basename(file))
+
     for file in glob.glob('*.csv'):
         os.remove(file)
+
+    # delete all .npd files in the working directory
+    # for file in glob.glob('*.npd'):
+    #     os.remove(file)
+
 
     if len(sys.argv) == 2:
         npdFilePath = workingDir + '\\' + sys.argv[1]
@@ -153,10 +185,18 @@ if __name__ == "__main__":
         print('bridge file does not exist')
         sys.exit(1)
         
-    time, counts = processFile(bridgePath)
+    metadata = getMetaData(workingDir + '\\metadata.csv')
+    zeroCalPress = int(metadata['bridgeAmbientReference'])
+    sensitivity = float(metadata['bridgeSensitivity']) / 1e6
+    gain = int(metadata['bridgeGain'])
+    serialNumber = metadata['serialNumber']
+    time, counts, decoderPress = processBridgeFile(bridgePath)
     pressure = countsToPress(counts)
-    
+
+    # copy the npd file to C:\Users\Shawn\NPD Dropbox\Projects\inQB8\Engineering\Hardware\logs\Rev1 Implant Scale Test Logs
+    # shutil.copy(npdFilePath, 'C:\\Users\\Shawn\\NPD Dropbox\\Projects\\inQB8\\Engineering\\Hardware\\logs\\Rev1 Implant Scale Test Logs\\' + serialNumber + '.npd')
+
     # print the time it took to process the data
     print(f'Data processing time: {(pd.Timestamp.now() - startTime).total_seconds():.3f} seconds')
-    plotData(time, pressure) # change this to plot volts once conversion is implemented
+    plotData(time, pressure, decoderPress) # change this to plot volts once conversion is implemented
     
