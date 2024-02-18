@@ -1,6 +1,6 @@
 from machine import Pin, I2C
 from ssd1306 import SSD1306_I2C as oled
-from time import sleep
+import random
 
 # turn on pico LED
 led = Pin('LED', Pin.OUT)
@@ -10,7 +10,6 @@ led.value(0)
 i2c = I2C(0, scl=Pin(17), sda=Pin(16), freq=400000)
 addr = 0x3d
 disp = oled(128, 64, i2c, addr)
-
 # Functions
 def reg_write(i2c, addr, reg, data):
     # Construct message
@@ -32,10 +31,10 @@ def reg_read(i2c, addr, reg, nbytes=1):
     return data
 
 disp.init_display()
-disp.fill(1)
-disp.show()
-sleep(1)
-disp.fill(0)
-disp.show()
-disp.text("Hello, World!", 10, 20, 1)
-disp.show()
+while True:
+    disp.fill(0)
+    disp.pixel(random.randint(0,128), random.randint(0,64), 1)
+    disp.pixel(random.randint(0,128), random.randint(0,64), 1)
+    disp.pixel(random.randint(0,128), random.randint(0,64), 1)
+    disp.pixel(random.randint(0,128), random.randint(0,64), 1)
+    disp.show()
