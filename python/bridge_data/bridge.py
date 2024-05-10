@@ -29,7 +29,7 @@ xlabel = 'Time [s]'
 ylabel = 'Pressure [mmHg]'
 plotlabel = 'Pressure vs Time'
 colNames = ['time', 'counts', 'decoderPress']
-trimFirstVals = 1 # trim the leading values to remove startup transient. # TODO: remove this once transient is fixed 
+trimFirstVals = 0 # trim the leading values to remove startup transient. # TODO: remove this once transient is fixed 
 figXsize = 18
 figYsize = 10
 
