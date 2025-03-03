@@ -19,17 +19,31 @@ if __name__ == "__main__":
     
     # if no arguments are given, ask for an equation
     if len(sys.argv) == 1:
-        eq = Equation(input("Enter an equation: "))
-        eq.solve_for(input("Enter solve for symbol: "))
+        try:
+            eq = Equation(input("Enter an equation: "))
+            eq.solve_for(input("Enter solve for symbol: "))
+        except ValueError as e:
+            print(f"Error: Invalid equation format - {str(e)}")
+        except Exception as e:
+            print(f"Error: {str(e)}")
     # if there is one argument, use that as the equation and ask for a solve-for symbol
     elif len(sys.argv) == 2:
-        eq = Equation(sys.argv[1])
-        eq.solve_for(input("Enter solve for symbol: "))
+        try:
+            eq = Equation(sys.argv[1])
+            eq.solve_for(input("Enter solve for symbol: "))
+        except ValueError as e:
+            print(f"Error: Invalid equation format - {str(e)}")
+        except Exception as e:
+            print(f"Error: {str(e)}")
     # if there are two arguments use the first as the equation and the sencond as the symbol to solve for
     elif len(sys.argv) == 3:
-        eq = Equation(sys.argv[1])
-        pprint(eq.solve_for(sys.argv[2]))
+        try:
+            eq = Equation(sys.argv[1])
+            pprint(eq.solve_for(sys.argv[2]))
+        except ValueError as e:
+            print(f"Error: Invalid equation format - {str(e)}")
+        except Exception as e:
+            print(f"Error: {str(e)}")
     else:
-        print("Error: Invlaid arguments")
-
+        print("Error: Invalid arguments")
     pprint(eq.solution)
